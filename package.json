@@ -1,0 +1,12 @@
+{
+  "name": "paddle-invoice-send",
+  "version": "1.0.0",
+  "description": "Scheduled Lambda to send Paddle invoices from DynamoDB",
+  "main": "CheckAndSendInvoices.js",
+  "repository": "https://github.com/whitej031788/paddle-invoice-send",
+  "author": "Jamie White",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.18.0"
+  }
+}
