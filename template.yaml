@@ -8,26 +8,52 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: CheckAndSendInvoices.lambdaHandler
-      Runtime: nodejs
+      Runtime: nodejs8.10
       Policies: AmazonDynamoDBFullAccess
       Events:
-        CheckAndSendInvoicesScheduledEvent:
+        CheckInvoicesScheduledEvent:
           Type: Schedule
           Properties:
-            Schedule: rate(1 minute)
+            Schedule: rate(12 hours)
 
-  AlarmTopic:
+  PaddleInvoiceTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions:
+        - AttributeName: "id"
+          AttributeType: "S"
+        - AttributeName: "contract_start_date"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "id"
+          KeyType: "HASH"
+      GlobalSecondaryIndexes: 
+        - IndexName: "ContractStartDate"
+          KeySchema: 
+            - AttributeName: "contract_start_date"
+              KeyType: "HASH"
+          ProvisionedThroughput: 
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+          Projection: 
+            ProjectionType: "ALL"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "paddle_invoices_to_send"
+
+  InvoiceAlarmTopic:
     Type: AWS::SNS::Topic
     Properties:
       Subscription:
       - Protocol: email
         Endpoint: !Ref NotificationEmail
 
-  Alarm:
+  InvoiceAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmActions:
-        - !Ref AlarmTopic
+        - !Ref InvoiceAlarmTopic
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: FunctionName
