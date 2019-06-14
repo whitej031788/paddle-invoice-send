@@ -1,0 +1,3 @@
+company_name,company_email,vat_number,company_number,company_address,company_city,company_state,company_postcode,company_country,contract_start_date,contract_end_date,contract_amount,contract_currency,payment_terms,purchase_order_number,product_id
+Uber LLC,uber@uber.com,JHSDA79432,9999999,123 Second Ln,Atlanta,MI,67267,US,2019-01-28,2020-01-28,5000.00,USD,60,,562929
+Uber LLC,uber@uber.com,JHSDA79432,9999999,123 Second Ln,Atlanta,MI,67267,US,2019-01-28,2020-01-28,5000.00,USD,60,,562929
