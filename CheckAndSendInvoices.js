@@ -32,13 +32,50 @@
  * @returns {Object} object.body - JSON Payload to be returned
  * 
  */
-exports.lambdaHandler = async (event, context) => {
+// Load the SDK for JavaScript
+const AWS = require('aws-sdk');
+AWS.config.update({region: 'us-east-2'});
+
+// Create DynamoDB service object
+const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+const config = require('./config.json');
+
+exports.lambdaHandler = (event, context) => {
     try {
-        console.log("Hello, world!");
+        // The below currenctly successfully gets contracts for a certain day
+        // and returns them in the data.Items array; important note, each value is
+        // an object as written, like { "S" : "USD" }
+        ddb.scan({
+            TableName : config.DDB_TABLE_NAME,
+            FilterExpression: "contract_start_date = :contract_start_date",
+            ExpressionAttributeValues: {
+                ":contract_start_date": {
+                    "S": formatDate("2019-01-28")
+                }
+            }
+        }, function(err, data) {
+            if (err) {
+                console.log(err);
+                return err;
+            } else {
+                console.log(data.Items);
+                return data.Items;
+            }
+        });
     } catch (err) {
         console.log(err);
         return err;
     }
-
-    return "hello world logged";
 };
+
+function formatDate(date) {
+    var d = date ? new Date(date) : new Date(),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, month, day].join('-');
+}

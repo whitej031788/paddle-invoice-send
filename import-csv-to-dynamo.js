@@ -3,45 +3,39 @@ const csv = require('csvtojson');
 const crypto = require('crypto');
 
 // Load the SDK for JavaScript
-let AWS = require('aws-sdk');
+const AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-2'});
 
 // Create DynamoDB service object
-let ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-
-// How many items we want to batchWrite at a time
-const BATCH_LIMIT = 1;
-// DynamoDB table name
-const TABLE_NAME = "paddle_invoices_to_send";
+const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+const config = require('./config.json');
 
 // Prepare DynamoDB write params
 let writeItem = {};
 writeItem.RequestItems = {};
-writeItem.RequestItems[TABLE_NAME] = [];
+writeItem.RequestItems[config.DDB_TABLE_NAME] = [];
 // Create a JSON array from a CSV file using csvtojson library
 csv()
 .fromFile(csvFilePath)
 .then((jsonObj) => {
     let tmpArr = [];
-    for (let i = 0; i < jsonObj.length; i++) {
-        if (tmpArr.length < BATCH_LIMIT) {
+    for (let i = 0; i < jsonObj.length; i) {
+        if (tmpArr.length < config.DDB_BATCH_LIMIT) {
             let myId = generateIdFromRow(jsonObj[i]);
             tmpArr.push(generateDynamoObjectFromRow(jsonObj[i], myId));
+            i++;
         } else {
-            writeItem.RequestItems[TABLE_NAME] = tmpArr;
-            ddb.batchWriteItem(writeItem, function(err, data) {
-                if (err) {
-                    console.log("Error", err);
-                    tmpArr = [];
-                    writeItem.RequestItems[TABLE_NAME] = [];
-                } else {
-                    console.log("Success", data);
-                    tmpArr = [];
-                    writeItem.RequestItems[TABLE_NAME] = [];
-                }
-            });
+            batchWriteItems(tmpArr);
+            tmpArr = [];
         }
     }
+
+    if (tmpArr.length > 0) {
+        batchWriteItems(tmpArr);
+        tmpArr = [];
+    }
+
+    console.log("Finished DynamoDB write from CSV");
 });
 
 // The below currenctly successfully gets contracts for a certain day
@@ -49,7 +43,7 @@ csv()
 // an object as written, like { "S" : "USD" }
 /*
 ddb.scan({
-    TableName : TABLE_NAME,
+    TableName : config.DDB_TABLE_NAME,
     FilterExpression: "contract_start_date = :contract_start_date",
     ExpressionAttributeValues: {
         ":contract_start_date": {
@@ -60,6 +54,22 @@ ddb.scan({
     console.log(data.Items[0].contract_currency);
 });
 */
+
+function batchWriteItems(arr) {
+    console.log('Writing batch object to DDB');
+    writeItem.RequestItems[config.DDB_TABLE_NAME] = arr;
+    ddb.batchWriteItem(writeItem, function(err, data) {
+        if (err) {
+            console.log("Error", err);
+            arr = [];
+            writeItem.RequestItems[config.DDB_TABLE_NAME] = [];
+        } else {
+            console.log("Success", data);
+            arr = [];
+            writeItem.RequestItems[config.DDB_TABLE_NAME] = [];
+        }
+    }); 
+}
 
 function generateIdFromRow(row) {
     let string = row.company_name + row.contract_start_date + row.company_email + row.purchase_order_number;

@@ -1,0 +1,4 @@
+{
+    "DDB_TABLE_NAME" : "paddle_invoices_to_send",
+    "DDB_BATCH_LIMIT" : 10
+}
