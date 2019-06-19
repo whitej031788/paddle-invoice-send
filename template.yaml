@@ -14,7 +14,7 @@ Resources:
         CheckInvoicesScheduledEvent:
           Type: Schedule
           Properties:
-            Schedule: rate(1 minute)
+            Schedule: rate(24 hours)
 
   PaddleInvoiceTable:
     Type: AWS::DynamoDB::Table

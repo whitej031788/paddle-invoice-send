@@ -14,6 +14,7 @@ const config = require('./config.json');
 let writeItem = {};
 writeItem.RequestItems = {};
 writeItem.RequestItems[config.DDB_TABLE_NAME] = [];
+/*
 // Create a JSON array from a CSV file using csvtojson library
 csv()
 .fromFile(csvFilePath)
@@ -34,29 +35,26 @@ csv()
         batchWriteItems(tmpArr);
         tmpArr = [];
     }
-
-    console.log("Finished DynamoDB write from CSV");
-});
+});*/
 
 // The below currenctly successfully gets contracts for a certain day
 // and returns them in the data.Items array; important note, each value is
 // an object as written, like { "S" : "USD" }
-/*
+
 ddb.scan({
     TableName : config.DDB_TABLE_NAME,
     FilterExpression: "contract_start_date = :contract_start_date",
     ExpressionAttributeValues: {
         ":contract_start_date": {
-            "S": "2019-01-28"
+            "S": "2019-06-19"
         }
     }
 }, function(err, data) {
-    console.log(data.Items[0].contract_currency);
+    console.log(data.Items[0].contract_currency["S"]);
 });
-*/
 
+/*
 function batchWriteItems(arr) {
-    console.log('Writing batch object to DDB');
     writeItem.RequestItems[config.DDB_TABLE_NAME] = arr;
     ddb.batchWriteItem(writeItem, function(err, data) {
         if (err) {
@@ -64,7 +62,7 @@ function batchWriteItems(arr) {
             arr = [];
             writeItem.RequestItems[config.DDB_TABLE_NAME] = [];
         } else {
-            console.log("Success", data);
+            console.log("Success written " + arr.length + " items to DynamoDB\nHere are unprocessed data items: ", data);
             arr = [];
             writeItem.RequestItems[config.DDB_TABLE_NAME] = [];
         }
@@ -89,4 +87,4 @@ function generateDynamoObjectFromRow(row, id) {
         }
     }
     return ddObj;
-}
+}*/
