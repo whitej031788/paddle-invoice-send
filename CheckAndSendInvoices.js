@@ -28,7 +28,7 @@ exports.lambdaHandler = (event, context) => {
                 console.log('Error in DynamoDB scan: ', err);
                 return err;
             } else {
-                callPaddleApiAsync(data.Items);
+                callPaddleApi(data.Items);
                 return data.Items;
             }
         });
@@ -38,14 +38,16 @@ exports.lambdaHandler = (event, context) => {
     }
 };
 
-const callPaddleApiAsync = async(invoices) => {
+const callPaddleApi = async(invoices) => {
     for (let i = 0; i < invoices.length; i++) {
         if (!invoices[i].paddle_buyer_id) {
             await createBuyerPromiseSingleItem(invoices[i]).then((response) => {
                 console.log(response.data);
-                /*await createContractPromiseSingleItem(invoices[i]).then((data) => {
-                    console.log(data);
-                });*/
+                // Add new Paddle Buyer ID to the object
+                invoices[i].paddle_buyer_id = { "S" : response.data.id};
+                createContractPromiseSingleItem(invoices[i]).then((response) => {
+                    console.log(response);
+                });
             });
         }
     }
@@ -70,18 +72,18 @@ function createContractPromiseSingleItem(item) {
     return new Promise((resolve, reject) => {
         axios({
             method: 'POST',
-            url: 'https://vendors.staging.paddle-internal.com/api/2.1/invoicing/buyers',
-            data: formatBuyerItemForPost(item),
+            url: 'https://vendors.staging.paddle-internal.com/api/2.1/invoicing/contracts',
+            data: formatContractItemForPost(item),
             headers: { Authorization: 'Bearer ' + cognitoToken }
         })
         .then(function (response) {
             //handle success
-            return resolve(response)
+            return resolve(response);
         })
         .catch(function (error) {
             //handle error
             console.log(error);
-            return reject(error)
+            return reject(error);
         });
     });
 }
@@ -96,27 +98,21 @@ function createBuyerPromiseSingleItem(item) {
         })
         .then(function (response) {
             //handle success
-            return resolve(response)
+            return resolve(response);
         })
         .catch(function (error) {
             //handle error
             console.log(error);
-            return reject(error)
+            return reject(error);
         });
     });
 }
 
 function formatContractItemForPost(item) {
     let retObj = {};
-    retObj.name = item.company_name["S"];
-    retObj.email = item.company_email["S"];
-    // retObj.vat_number = ""; Don't have valid VAT numbers, exclude
-    retObj.company_number = item.company_number["S"];
-    retObj.address = item.company_address["S"];
-    retObj.city = item.company_city["S"];
-    retObj.state = item.company_state["S"];
-    retObj.postcode = item.company_postcode["S"];
-    retObj.country_id = 223; // This is US country_id in our DB, need to create mapping table for this
+    retObj.start_date = item.contract_start_date["S"];
+    retObj.end_date = item.contract_end_date["S"];
+    retObj.buyer_id = parseInt(item.paddle_buyer_id["S"]);
     return retObj;
 }
 
