@@ -38,15 +38,20 @@ exports.lambdaHandler = (event, context) => {
     }
 };
 
-const callPaddleApi = async(invoices) => {
+const callPaddleApi = (invoices) => {
     for (let i = 0; i < invoices.length; i++) {
         if (!invoices[i].paddle_buyer_id) {
-            await createBuyerPromiseSingleItem(invoices[i]).then((response) => {
-                console.log(response.data);
+            createBuyerPromiseSingleItem(invoices[i]).then((response) => {
+                console.log(response);
                 // Add new Paddle Buyer ID to the object
                 invoices[i].paddle_buyer_id = { "S" : response.data.id};
                 createContractPromiseSingleItem(invoices[i]).then((response) => {
                     console.log(response);
+                    invoices[i].paddle_contract_id = { "S" : response.data.id};
+                    createPaymentPromiseSingleItem(invoices[i]).then((response) => {
+                        invoices[i].paddle_payment_id = { "S" : response.data.id};
+                        console.log(response);
+                    });
                 });
             });
         }
@@ -68,6 +73,26 @@ function generateDynamoObjectFromItemAndSave(item) {
     return ddObj;
 }
 
+function createPaymentPromiseSingleItem(item) {
+    return new Promise((resolve, reject) => {
+        console.log(formatPaymentItemForPost(item));
+        axios({
+            method: 'POST',
+            url: 'https://vendors.staging.paddle-internal.com/api/2.1/invoicing/payments',
+            data: formatPaymentItemForPost(item),
+            headers: { Authorization: 'Bearer ' + cognitoToken }
+        })
+        .then(function (response) {
+            // handle success
+            return resolve(response.data);
+        })
+        .catch(function (error) {
+            // handle error
+            return reject(error);
+        });
+    });
+}
+
 function createContractPromiseSingleItem(item) {
     return new Promise((resolve, reject) => {
         axios({
@@ -77,12 +102,11 @@ function createContractPromiseSingleItem(item) {
             headers: { Authorization: 'Bearer ' + cognitoToken }
         })
         .then(function (response) {
-            //handle success
-            return resolve(response);
+            // handle success
+            return resolve(response.data);
         })
         .catch(function (error) {
-            //handle error
-            console.log(error);
+            // handle error
             return reject(error);
         });
     });
@@ -97,15 +121,28 @@ function createBuyerPromiseSingleItem(item) {
             headers: { Authorization: 'Bearer ' + cognitoToken }
         })
         .then(function (response) {
-            //handle success
-            return resolve(response);
+            // handle success
+            return resolve(response.data);
         })
         .catch(function (error) {
-            //handle error
-            console.log(error);
+            // handle error
             return reject(error);
         });
     });
+}
+
+function formatPaymentItemForPost(item) {
+    let retObj = {};
+    retObj.contract_id = parseInt(item.paddle_contract_id["S"]);
+    retObj.amount = parseFloat(item.contract_amount["S"]);
+    retObj.currency_id = 1; // USD ID, need to map it
+    retObj.term_days = parseInt(item.payment_terms["S"]);
+    retObj.length_days = 365; // address this
+    retObj.status = "draft"; // change to unpaid to send it
+    retObj.purchase_order_number = item.purchase_order_number["S"];
+    retObj.product_ids = [parseInt(item.product_id["S"])];
+    retObj.passthrough = item.id["S"]; // pass md5 hash for passthrough
+    return retObj;
 }
 
 function formatContractItemForPost(item) {
