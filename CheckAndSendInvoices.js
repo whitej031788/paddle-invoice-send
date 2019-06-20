@@ -29,7 +29,7 @@ exports.lambdaHandler = (event, context) => {
             FilterExpression: "contract_start_date = :contract_start_date",
             ExpressionAttributeValues: {
                 ":contract_start_date": {
-                    "S": formatDate("2019-06-21")
+                    "S": formatDate()
                 }
             }
         }, function(err, data) {
