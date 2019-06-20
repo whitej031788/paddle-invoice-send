@@ -6,8 +6,6 @@ Catch webhooks
 Determine contract_start_date offset for finding/sending
 Change status to unpaid from draft
 */
-
-const fs = require('fs');
 // Load the axios library for REST requests
 const axios = require('axios');
 // Load the SDK for JavaScript
@@ -19,7 +17,7 @@ const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 const docClient = new AWS.DynamoDB.DocumentClient();
 const config = require('./config.json');
 
-const cognitoToken = fs.readFileSync(".cognito-access", "utf8");
+const cognitoToken = process.env.COGNITO_TOKEN;
 
 exports.lambdaHandler = (event, context) => {
     try {

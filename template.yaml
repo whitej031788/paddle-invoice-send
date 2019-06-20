@@ -3,6 +3,9 @@ Transform: AWS::Serverless-2016-10-31
 Parameters: 
   NotificationEmail:
     Type: String
+  MyToken:
+    Type: String
+    Default : ""
 Resources:
   CheckAndSendInvoices:
     Type: AWS::Serverless::Function
@@ -10,6 +13,11 @@ Resources:
       Handler: CheckAndSendInvoices.lambdaHandler
       Runtime: nodejs8.10
       Policies: AmazonDynamoDBFullAccess
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          COGNITO_TOKEN: !Ref MyToken
       Events:
         CheckInvoicesScheduledEvent:
           Type: Schedule
