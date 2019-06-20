@@ -1,3 +1,12 @@
+/*
+TO DO:
+Mappings for country_id and currency_id
+Auto generate cognito token
+Catch webhooks
+Determine contract_start_date offset for finding/sending
+Change status to unpaid from draft
+*/
+
 const fs = require('fs');
 // Load the axios library for REST requests
 const axios = require('axios');
@@ -22,7 +31,7 @@ exports.lambdaHandler = (event, context) => {
             FilterExpression: "contract_start_date = :contract_start_date",
             ExpressionAttributeValues: {
                 ":contract_start_date": {
-                    "S": formatDate()
+                    "S": formatDate("2019-06-21")
                 }
             }
         }, function(err, data) {
@@ -170,7 +179,7 @@ function formatPaymentItemForPost(item) {
     retObj.currency_id = 1; // USD ID, need to map it
     retObj.term_days = parseInt(item.payment_terms["S"]);
     retObj.length_days = 365; // address this
-    retObj.status = "draft"; // change to unpaid to send it
+    retObj.status = "unpaid"; // change to unpaid to send it
     retObj.purchase_order_number = item.purchase_order_number ? item.purchase_order_number["S"] : undefined;
     retObj.product_ids = [parseInt(item.product_id["S"])];
     retObj.passthrough = item.id ? item.id["S"] : undefined; // pass md5 hash for passthrough
