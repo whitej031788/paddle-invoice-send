@@ -6,9 +6,10 @@ AWS.config.update({region: 'us-east-2'});
 
 // Create DynamoDB service object
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+const docClient = new AWS.DynamoDB.DocumentClient();
 const config = require('./config.json');
 
-const cognitoToken = "eyJraWQiOiJySXR3MHphZUpcLzBYYUJ3Q0FNblowekZhXC9TTDQ2UmxLKzJqSmF2SkhnbFE9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIwY2U2MWYxNC1lNGE1LTQ2Y2EtYTkxOC1mN2EyYzg3NjY0NjAiLCJldmVudF9pZCI6ImI1OGU5NGE0LTNhNzMtNGYwMy04NGEwLTQ2MjhhOGFmNTg0NSIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE1NjA5NTk5MTQsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX0g0a09sZTg5QiIsImV4cCI6MTU2MDk2NzQ5NCwiaWF0IjoxNTYwOTYzODk1LCJqdGkiOiI4OGIyOGI3Mi04M2FlLTQzYzctOWQ5ZS01MDA3OGM5MzkwY2YiLCJjbGllbnRfaWQiOiI0aW9rdDEzbWR0cXJnMDNoY3I0NGNnYzZocCIsInVzZXJuYW1lIjoiMGNlNjFmMTQtZTRhNS00NmNhLWE5MTgtZjdhMmM4NzY2NDYwIn0.HLhWyCjjn2O6Uw5ZKFPpiMoLmEB0p3AndxGdIKrsuI88s7wOvfwIfzDzR6U-Z-vdW0e16CDXH1odC0LMaUGFnSKHHwSlcPWvh_7hME9pQFRRnUl_Ppl3i7GMyfFUxLGOcmN9sqQ-SKpf1BqrAiNeZfSwFqD2o27roalXANXkiaU8SNIrq9YpaJd1oqOG33FBHPGcgbegzl7SoINAtJXvayW_LENXideVB-nu3gMfi20isQ8_fX-pMwYHC0alU_tlNti88BKukCsL-7jvIMolhXqaD4cq0-B2Zmp6ePo3qw4vNnEJ1PQYX_9JjsCVz23aliAkD1PDIm8TTRLreTQy3A";
+const cognitoToken = "eyJraWQiOiJySXR3MHphZUpcLzBYYUJ3Q0FNblowekZhXC9TTDQ2UmxLKzJqSmF2SkhnbFE9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIwY2U2MWYxNC1lNGE1LTQ2Y2EtYTkxOC1mN2EyYzg3NjY0NjAiLCJldmVudF9pZCI6Ijc3NjZiNTYxLTc2NzgtNDQwMS04MDFmLWI1NGNkOTgyOWMyYiIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE1NjEwMTgyMjcsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX0g0a09sZTg5QiIsImV4cCI6MTU2MTAyMTgyNywiaWF0IjoxNTYxMDE4MjI3LCJqdGkiOiIxYWZjZjA2MC1iMWU2LTRhYWItOTRiYy1hMjlmM2QwZDMwYWEiLCJjbGllbnRfaWQiOiI0aW9rdDEzbWR0cXJnMDNoY3I0NGNnYzZocCIsInVzZXJuYW1lIjoiMGNlNjFmMTQtZTRhNS00NmNhLWE5MTgtZjdhMmM4NzY2NDYwIn0.FSePVOLWgG2VByZcwMa9HXuNG6cvYhP16WC9ZbZBkRFLdmIohAOCDZbs_LPiXZ09V5qJxT1xg_6-Xevd-xE__Pd8rfk-Q4VY12p4XU6bQatjqgNf1uNY7tEbMViJ6LgBteai2fdttszvLMCTuRNK9-q_dDTDjfLHtUQTdUxDOzCrpzjalbb8r5cBAWESn96bWFCeEo5E9kl2FnsyCc08xyIhKeY-z3LApNgokt_3r7lq8rbBOOKaJeUJMS12tWFru2wjFCrrlGuZeuk3E5bKiLajAg_prE6ER0hBf3-Q5AAV57p8zC6EKnSZwuTJdam1x8ov";
 
 exports.lambdaHandler = (event, context) => {
     try {
@@ -28,6 +29,7 @@ exports.lambdaHandler = (event, context) => {
                 console.log('Error in DynamoDB scan: ', err);
                 return err;
             } else {
+                console.log('Successfully fetched DynamoDB items, now calling API');
                 callPaddleApi(data.Items);
                 return data.Items;
             }
@@ -51,6 +53,9 @@ const callPaddleApi = (invoices) => {
                     createPaymentPromiseSingleItem(invoices[i]).then((response) => {
                         invoices[i].paddle_payment_id = { "S" : response.data.id};
                         console.log(response);
+                        // All API calls are done, and we have all the Paddle PK's
+                        // on the object, so write it back to DynamoDB
+                        generateDynamoObjectFromItemAndSave(invoices[i]);
                     });
                 });
             });
@@ -59,18 +64,27 @@ const callPaddleApi = (invoices) => {
 }
 
 function generateDynamoObjectFromItemAndSave(item) {
-    let ddObj = {};
-    ddObj.PutRequest = {};
-    ddObj.PutRequest.Item = {};
-    ddObj.PutRequest.Item.id = {"S" : id};
-    for (var property in row) {
-        if (row.hasOwnProperty(property)) {
-            if (row[property]) {
-                ddObj.PutRequest.Item[property] = { "S" : row[property]};
-            }
+    let params = {
+        TableName: config.DDB_TABLE_NAME,
+        Key: {
+            "id": item.id["S"]
+        },
+        UpdateExpression: "set paddle_buyer_id = :r, paddle_contract_id =: p, paddle_payment_id = :a",
+        ExpressionAttributeValues:{
+            ":r": item.paddle_buyer_id["S"],
+            ":p": item.paddle_contract_id["S"],
+            ":a": item.paddle_payment_id["S"]
+        },
+        ReturnValues: "UPDATED_NEW"
+    };
+
+    docClient.update(params, function(err, data) {
+        if (err) {
+            console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+        } else {
+            console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
         }
-    }
-    return ddObj;
+    });
 }
 
 function createPaymentPromiseSingleItem(item) {
@@ -139,9 +153,9 @@ function formatPaymentItemForPost(item) {
     retObj.term_days = parseInt(item.payment_terms["S"]);
     retObj.length_days = 365; // address this
     retObj.status = "draft"; // change to unpaid to send it
-    retObj.purchase_order_number = item.purchase_order_number["S"];
+    retObj.purchase_order_number = item.purchase_order_number["S"] || undefined;
     retObj.product_ids = [parseInt(item.product_id["S"])];
-    retObj.passthrough = item.id["S"]; // pass md5 hash for passthrough
+    retObj.passthrough = item.id["S"] || undefined; // pass md5 hash for passthrough
     return retObj;
 }
 
@@ -158,7 +172,7 @@ function formatBuyerItemForPost(item) {
     retObj.name = item.company_name["S"];
     retObj.email = item.company_email["S"];
     // retObj.vat_number = ""; Don't have valid VAT numbers, exclude
-    retObj.company_number = item.company_number["S"];
+    retObj.company_number = item.company_number["S"] || undefined;
     retObj.address = item.company_address["S"];
     retObj.city = item.company_city["S"];
     retObj.state = item.company_state["S"];
