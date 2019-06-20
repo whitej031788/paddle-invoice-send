@@ -9,7 +9,7 @@ const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 const docClient = new AWS.DynamoDB.DocumentClient();
 const config = require('./config.json');
 
-const cognitoToken = "eyJraWQiOiJySXR3MHphZUpcLzBYYUJ3Q0FNblowekZhXC9TTDQ2UmxLKzJqSmF2SkhnbFE9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIwY2U2MWYxNC1lNGE1LTQ2Y2EtYTkxOC1mN2EyYzg3NjY0NjAiLCJldmVudF9pZCI6Ijc3NjZiNTYxLTc2NzgtNDQwMS04MDFmLWI1NGNkOTgyOWMyYiIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE1NjEwMTgyMjcsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX0g0a09sZTg5QiIsImV4cCI6MTU2MTAyMTgyNywiaWF0IjoxNTYxMDE4MjI3LCJqdGkiOiIxYWZjZjA2MC1iMWU2LTRhYWItOTRiYy1hMjlmM2QwZDMwYWEiLCJjbGllbnRfaWQiOiI0aW9rdDEzbWR0cXJnMDNoY3I0NGNnYzZocCIsInVzZXJuYW1lIjoiMGNlNjFmMTQtZTRhNS00NmNhLWE5MTgtZjdhMmM4NzY2NDYwIn0.FSePVOLWgG2VByZcwMa9HXuNG6cvYhP16WC9ZbZBkRFLdmIohAOCDZbs_LPiXZ09V5qJxT1xg_6-Xevd-xE__Pd8rfk-Q4VY12p4XU6bQatjqgNf1uNY7tEbMViJ6LgBteai2fdttszvLMCTuRNK9-q_dDTDjfLHtUQTdUxDOzCrpzjalbb8r5cBAWESn96bWFCeEo5E9kl2FnsyCc08xyIhKeY-z3LApNgokt_3r7lq8rbBOOKaJeUJMS12tWFru2wjFCrrlGuZeuk3E5bKiLajAg_prE6ER0hBf3-Q5AAV57p8zC6EKnSZwuTJdam1x8ov";
+const cognitoToken = "eyJraWQiOiJySXR3MHphZUpcLzBYYUJ3Q0FNblowekZhXC9TTDQ2UmxLKzJqSmF2SkhnbFE9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIwY2U2MWYxNC1lNGE1LTQ2Y2EtYTkxOC1mN2EyYzg3NjY0NjAiLCJldmVudF9pZCI6Ijc3NjZiNTYxLTc2NzgtNDQwMS04MDFmLWI1NGNkOTgyOWMyYiIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE1NjEwMTgyMjcsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX0g0a09sZTg5QiIsImV4cCI6MTU2MTAyMTgyNywiaWF0IjoxNTYxMDE4MjI3LCJqdGkiOiIxYWZjZjA2MC1iMWU2LTRhYWItOTRiYy1hMjlmM2QwZDMwYWEiLCJjbGllbnRfaWQiOiI0aW9rdDEzbWR0cXJnMDNoY3I0NGNnYzZocCIsInVzZXJuYW1lIjoiMGNlNjFmMTQtZTRhNS00NmNhLWE5MTgtZjdhMmM4NzY2NDYwIn0.FSePVOLWgG2VByZcwMa9HXuNG6cvYhP16WC9ZbZBkRFLdmIohAOCDZbs_LPiXZ09V5qJxT1xg_6-Xevd-xE__Pd8rfk-Q4VY12p4XU6bQatjqgNf1uNY7tEbMViJ6LgBteai2fdttszvLMCTuRNK9-q_dDTDjfLHtUQTdUxDOzCrpzjalbb8r5cBAWESn96bWFCeEo5E9kl2FnsyCc08xyIhKeY-z3LApNgokt_3r7lq8rbBOOKaJeUJMS12tWFru2wjFCrrlGuZeuk3E5bKiLajAg_prE6ER0hBf3-Q5AAV57p8zC6EKnSZwuTJdam1x8ovK3oWocD417Mp3NpzEw";
 
 exports.lambdaHandler = (event, context) => {
     try {
@@ -44,15 +44,15 @@ const callPaddleApi = (invoices) => {
     for (let i = 0; i < invoices.length; i++) {
         if (!invoices[i].paddle_buyer_id) {
             createBuyerPromiseSingleItem(invoices[i]).then((response) => {
-                console.log(response);
+                console.log("Successfully created buyer: ", response);
                 // Add new Paddle Buyer ID to the object
                 invoices[i].paddle_buyer_id = { "S" : response.data.id};
                 createContractPromiseSingleItem(invoices[i]).then((response) => {
-                    console.log(response);
+                    console.log("Successfully created contract: ", response);
                     invoices[i].paddle_contract_id = { "S" : response.data.id};
                     createPaymentPromiseSingleItem(invoices[i]).then((response) => {
+                        console.log("Successfully created payment: ", response);
                         invoices[i].paddle_payment_id = { "S" : response.data.id};
-                        console.log(response);
                         // All API calls are done, and we have all the Paddle PK's
                         // on the object, so write it back to DynamoDB
                         generateDynamoObjectFromItemAndSave(invoices[i]);
@@ -69,7 +69,7 @@ function generateDynamoObjectFromItemAndSave(item) {
         Key: {
             "id": item.id["S"]
         },
-        UpdateExpression: "set paddle_buyer_id = :r, paddle_contract_id =: p, paddle_payment_id = :a",
+        UpdateExpression: "set paddle_buyer_id = :r, paddle_contract_id = :p, paddle_payment_id = :a",
         ExpressionAttributeValues:{
             ":r": item.paddle_buyer_id["S"],
             ":p": item.paddle_contract_id["S"],
@@ -153,9 +153,9 @@ function formatPaymentItemForPost(item) {
     retObj.term_days = parseInt(item.payment_terms["S"]);
     retObj.length_days = 365; // address this
     retObj.status = "draft"; // change to unpaid to send it
-    retObj.purchase_order_number = item.purchase_order_number["S"] || undefined;
+    retObj.purchase_order_number = item.purchase_order_number ? item.purchase_order_number["S"] : undefined;
     retObj.product_ids = [parseInt(item.product_id["S"])];
-    retObj.passthrough = item.id["S"] || undefined; // pass md5 hash for passthrough
+    retObj.passthrough = item.id ? item.id["S"] : undefined; // pass md5 hash for passthrough
     return retObj;
 }
 
@@ -172,7 +172,7 @@ function formatBuyerItemForPost(item) {
     retObj.name = item.company_name["S"];
     retObj.email = item.company_email["S"];
     // retObj.vat_number = ""; Don't have valid VAT numbers, exclude
-    retObj.company_number = item.company_number["S"] || undefined;
+    retObj.company_number = item.company_number ? item.company_number["S"] : undefined;
     retObj.address = item.company_address["S"];
     retObj.city = item.company_city["S"];
     retObj.state = item.company_state["S"];
