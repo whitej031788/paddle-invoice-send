@@ -17,7 +17,7 @@ const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 const docClient = new AWS.DynamoDB.DocumentClient();
 const config = require('./config.json');
 
-const cognitoToken = process.env.COGNITO_TOKEN;
+let cognitoToken = "";
 
 exports.lambdaHandler = (event, context) => {
     try {
@@ -29,7 +29,7 @@ exports.lambdaHandler = (event, context) => {
             FilterExpression: "contract_start_date = :contract_start_date",
             ExpressionAttributeValues: {
                 ":contract_start_date": {
-                    "S": formatDate()
+                    "S": formatDate("2019-06-20") // Leave empty for TODAY's date
                 }
             }
         }, function(err, data) {
@@ -38,10 +38,18 @@ exports.lambdaHandler = (event, context) => {
                 return err;
             } else {
                 console.log('Successfully fetched DynamoDB items, now calling API');
-                callPaddleApi(data.Items).then((response) => {
+                generateAuthToken().then((response) => {
                     console.log(response);
-                    return response;
-                });
+                    cognitoToken = response.access_token;
+                    callPaddleApi(data.Items).then((response) => {
+                        console.log(response);
+                        return response;
+                    });
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error)
+                });;
             }
         });
     } catch (err) {
@@ -112,12 +120,31 @@ function topLevelPromise(item) {
     });
 }
 
+function generateAuthToken() {
+    return new Promise((resolve, reject) => {
+        axios({
+            method: 'POST',
+            url: config.OAuthURL,
+            data: "grant_type=client_credentials&client_id=" + process.env.CLIENT_ID,
+            headers: { Authorization: 'Basic ' + process.env.BASE_64, "Content-Type":  "application/x-www-form-urlencoded"}
+        })
+        .then(function (response) {
+            // handle success
+            return resolve(response.data);
+        })
+        .catch(function (error) {
+            // handle error
+            return reject(error);
+        });
+    });
+}
+
 function createPaymentPromiseSingleItem(item) {
     return new Promise((resolve, reject) => {
         console.log(formatPaymentItemForPost(item));
         axios({
             method: 'POST',
-            url: 'https://vendors.staging.paddle-internal.com/api/2.1/invoicing/payments',
+            url: config.paddleApiURL + '/api/2.1/invoicing/payments',
             data: formatPaymentItemForPost(item),
             headers: { Authorization: 'Bearer ' + cognitoToken }
         })
@@ -136,7 +163,7 @@ function createContractPromiseSingleItem(item) {
     return new Promise((resolve, reject) => {
         axios({
             method: 'POST',
-            url: 'https://vendors.staging.paddle-internal.com/api/2.1/invoicing/contracts',
+            url: config.paddleApiURL + '/api/2.1/invoicing/contracts',
             data: formatContractItemForPost(item),
             headers: { Authorization: 'Bearer ' + cognitoToken }
         })
@@ -155,7 +182,7 @@ function createBuyerPromiseSingleItem(item) {
     return new Promise((resolve, reject) => {
         axios({
             method: 'POST',
-            url: 'https://vendors.staging.paddle-internal.com/api/2.1/invoicing/buyers',
+            url: config.paddleApiURL + '/api/2.1/invoicing/buyers',
             data: formatBuyerItemForPost(item),
             headers: { Authorization: 'Bearer ' + cognitoToken }
         })
@@ -179,7 +206,12 @@ function formatPaymentItemForPost(item) {
     retObj.length_days = 365; // address this
     retObj.status = "unpaid"; // change to unpaid to send it
     retObj.purchase_order_number = item.purchase_order_number ? item.purchase_order_number["S"] : undefined;
-    retObj.product_ids = [parseInt(item.product_id["S"])];
+    retObj.products = [
+        {
+            id: parseInt(item.product_id["S"]),
+            additional_information: "This is additional information"
+        }
+    ];
     retObj.passthrough = item.id ? item.id["S"] : undefined; // pass md5 hash for passthrough
     return retObj;
 }

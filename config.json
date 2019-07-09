@@ -1,4 +1,6 @@
 {
     "DDB_TABLE_NAME" : "paddle_invoices_to_send",
-    "DDB_BATCH_LIMIT" : 10
+    "DDB_BATCH_LIMIT" : 10,
+    "OAuthURL" : "https://paddle-staging-sellers.auth.us-east-1.amazoncognito.com/oauth2/token",
+    "paddleApiURL" : "https://vendors.staging.paddle-internal.com"
 }

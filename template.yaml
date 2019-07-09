@@ -3,9 +3,15 @@ Transform: AWS::Serverless-2016-10-31
 Parameters: 
   NotificationEmail:
     Type: String
-  MyToken:
+  ClientID:
     Type: String
-    Default : ""
+    Default : "6f73kj5le66o2vhaadd8n7kch6"
+  ClientSecret:
+    Type: String
+    Default : "8dg0q9lu2e4ocv7aue3dctku7s39bi5160sk23q8u0ku6j1n7lg"
+  Base64Sig:
+    Type: String
+    Default : "NmY3M2tqNWxlNjZvMnZoYWFkZDhuN2tjaDY6OGRnMHE5bHUyZTRvY3Y3YXVlM2RjdGt1N3MzOWJpNTE2MHNrMjNxOHUwa3U2ajFuN2xn"
 Resources:
   CheckAndSendInvoices:
     Type: AWS::Serverless::Function
@@ -17,7 +23,9 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          COGNITO_TOKEN: !Ref MyToken
+          CLIENT_ID: !Ref ClientID
+          CLIENT_SECRET: !Ref ClientSecret
+          BASE_64: !Ref Base64Sig
       Events:
         CheckInvoicesScheduledEvent:
           Type: Schedule
