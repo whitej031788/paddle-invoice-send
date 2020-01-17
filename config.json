@@ -1,6 +1,8 @@
 {
     "DDB_TABLE_NAME" : "paddle_invoices_to_send",
     "DDB_BATCH_LIMIT" : 10,
-    "OAuthURL" : "https://paddle-staging-sellers.auth.us-east-1.amazoncognito.com/oauth2/token",
-    "paddleApiURL" : "https://vendors.staging.paddle-internal.com"
+    "OAuthURL" : "https://paddle-sandbox-sellers.auth.us-east-1.amazoncognito.com/oauth2/token",
+    "paddleApiURL" : "https://sandbox-vendors.paddle.com",
+    "paddleClientID" : "40uk5ie6srtle5pgmbt94u0v0p",
+    "paddleClientSecret" : "1sk6c65v7v21usufm3irqv0q8t8etahbi76r1re6auanvkmoi8s3"
 }

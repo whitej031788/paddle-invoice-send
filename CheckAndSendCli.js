@@ -39,11 +39,11 @@ try {
             console.log('Successfully fetched DynamoDB items, now calling API');
             generateAuthToken().then((response) => {
                 console.log(response);
-                cognitoToken = response.access_token;
+                /*cognitoToken = response.access_token;
                 callPaddleApi(data.Items).then((response) => {
                     console.log(response);
                     return response;
-                });
+                });*/
             })
             .catch(function (error) {
                 // handle error
@@ -121,10 +121,10 @@ function topLevelPromise(item) {
 function generateAuthToken() {
     return new Promise((resolve, reject) => {
         axios({
-            method: 'POST',
-            url: config.OAuthURL,
-            data: "grant_type=client_credentials&client_id=6f73kj5le66o2vhaadd8n7kch6",
-            headers: { Authorization: 'Basic NmY3M2tqNWxlNjZvMnZoYWFkZDhuN2tjaDY6OGRnMHE5bHUyZTRvY3Y3YXVlM2RjdGt1N3MzOWJpNTE2MHNrMjNxOHUwa3U2ajFuN2xn', "Content-Type":  "application/x-www-form-urlencoded"}
+            method: "POST",
+            url: "https://paddle-sandbox-sellers.auth.us-east-1.amazoncognito.com/oauth2/token",
+            data: "grant_type=client_credentials&client_id=" + config.paddleClientID,
+            headers: { Authorization: "Basic " + Buffer.from(config.paddleClientID + ":" + config.paddleClientSecret).toString("base64"), "Content-Type":  "application/x-www-form-urlencoded"}
         })
         .then(function (response) {
             // handle success
